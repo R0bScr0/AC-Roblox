@@ -1,0 +1,22 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ACModule = require(ReplicatedStorage:WaitForChild("ACModule"))
+ACModule:Init()
+
+-- Example remote registration for player actions that need validation
+ACModule:RegisterRemote("PlayerShoot", {
+	rateLimit = 6,
+	validate = function(player, args)
+		-- args structure validation example
+		local a = args[1]
+		if type(a) ~= "table" then return false, "bad args" end
+		if type(a.targetId) ~= "number" then return false, "bad targetId" end
+		if type(a.ts) ~= "number" then return false, "bad ts" end
+		-- timestamp freshness
+		if math.abs(a.ts - tick()) > 5 then return false, "ts drift" end
+		return true
+	end
+}, function(player, payload)
+	-- handler called only after validation
+	-- payload is the same arguments passed: payload is the payload table
+	-- implement server authoritative logic here (e.g. check LOS, ammo, cooldowns)
+end)
